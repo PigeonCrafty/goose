@@ -45,7 +45,6 @@ struct SystemPromptContext {
     max_tools: usize,
     code_execution_mode: bool,
     include_extensions: bool,
-    extension_management_enabled: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     moim_system_prompt_block: Option<String>,
 }
@@ -61,7 +60,6 @@ pub struct SystemPromptBuilder<'a, M> {
     hints: Option<String>,
     code_execution_mode: bool,
     include_extensions: bool,
-    extension_management_enabled: bool,
     goose_mode: Option<GooseMode>,
 }
 
@@ -107,11 +105,6 @@ impl<'a> SystemPromptBuilder<'a, PromptManager> {
 
     pub fn without_extensions(mut self) -> Self {
         self.include_extensions = false;
-        self
-    }
-
-    pub fn with_extension_management(mut self, enabled: bool) -> Self {
-        self.extension_management_enabled = enabled;
         self
     }
 
@@ -178,7 +171,6 @@ impl<'a> SystemPromptBuilder<'a, PromptManager> {
             max_tools: MAX_TOOLS,
             code_execution_mode: self.code_execution_mode,
             include_extensions: self.include_extensions,
-            extension_management_enabled: self.extension_management_enabled,
             moim_system_prompt_block: moim::system_prompt_block(),
         };
 
@@ -311,7 +303,6 @@ impl PromptManager {
             hints: None,
             code_execution_mode: false,
             include_extensions: true,
-            extension_management_enabled: false,
             goose_mode: None,
         }
     }
@@ -524,29 +515,6 @@ mod tests {
                 false,
             ))
             .with_extension_and_tool_counts(MAX_EXTENSIONS + 1, MAX_TOOLS + 1)
-            .build();
-
-        assert_snapshot!(system_prompt)
-    }
-
-    #[test]
-    fn test_typical_setup_with_extension_management() {
-        let manager = PromptManager::with_timestamp(DateTime::<Utc>::from_timestamp(0, 0).unwrap());
-
-        let system_prompt = manager
-            .builder()
-            .with_extension(ExtensionInfo::new(
-                "extension_A",
-                "<instructions on how to use extension A>",
-                true,
-            ))
-            .with_extension(ExtensionInfo::new(
-                "extension_B",
-                "<instructions on how to use extension B (no resources)>",
-                false,
-            ))
-            .with_extension_and_tool_counts(MAX_EXTENSIONS + 1, MAX_TOOLS + 1)
-            .with_extension_management(true)
             .build();
 
         assert_snapshot!(system_prompt)
